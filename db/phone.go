@@ -12,6 +12,7 @@ type PhoneNumber struct {
 	Number string
 }
 
+// Open opens the database
 func Open(driverName, dataSource string) (*DB, error) {
 	db, err := sql.Open(driverName, dataSource)
 	if err != nil {
@@ -24,10 +25,12 @@ type DB struct {
 	db *sql.DB
 }
 
+// Close closes the database
 func (db *DB) Close() error {
 	return db.db.Close()
 }
 
+// Seed populates the database with some mock data
 func (db *DB) Seed() error {
 	data := []string{
 		"1234567890",
@@ -48,6 +51,7 @@ func (db *DB) Seed() error {
 	return nil
 }
 
+// AllPhones retreieves all the phones in the database
 func (db *DB) AllPhones() ([]PhoneNumber, error) {
 	rows, err := db.db.Query("SELECT id, value FROM phone_numbers")
 	if err != nil {
@@ -69,6 +73,7 @@ func (db *DB) AllPhones() ([]PhoneNumber, error) {
 	return ret, nil
 }
 
+// FindPhone finds a phone by its phone number
 func (db *DB) FindPhone(number string) (*PhoneNumber, error) {
 	var p PhoneNumber
 	err := db.db.QueryRow("SELECT * FROM phone_numbers WHERE value=$1", number).Scan(&p.ID, &p.Number)
@@ -81,12 +86,14 @@ func (db *DB) FindPhone(number string) (*PhoneNumber, error) {
 	return &p, nil
 }
 
+// UpdatePhone updates an existing phone number in the database
 func (db *DB) UpdatePhone(p *PhoneNumber) error {
 	statement := `UPDATE phone_numbers SET value=$2 WHERE id=$1`
 	_, err := db.db.Exec(statement, p.ID, p.Number)
 	return err
 }
 
+// DeletePhone deletes a phone number from the database
 func (db *DB) DeletePhone(id int) error {
 	statement := `DELETE FROM phone_numbers WHERE id=$1`
 	_, err := db.db.Exec(statement, id)
@@ -103,6 +110,7 @@ func insertPhone(db *sql.DB, phone string) (int, error) {
 	return id, nil
 }
 
+// Migrate creates the phone number table in the database
 func Migrate(driverName, dataSource string) error {
 	db, err := sql.Open(driverName, dataSource)
 	if err != nil {
@@ -126,6 +134,7 @@ func createPhoneNumbersTable(db *sql.DB) error {
 	return err
 }
 
+// Reset resets the database if one exists
 func Reset(driverName, dataSource, dbName string) error {
 	db, err := sql.Open(driverName, dataSource)
 	if err != nil {
